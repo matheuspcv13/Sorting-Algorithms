@@ -1,9 +1,11 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
+#include <vector> /* biblioteca para auxiliar manipulacao dos vetores */
 #include <string>
 
 using namespace std;
+int qtd_trocas = 0;
+int qtd_comparacoes = 0;
 
 /* funcao para carregar dados do arquivo dados.txt */
 vector<int> carregarDados(const string& nomeArquivo) {
@@ -24,9 +26,9 @@ vector<int> carregarDados(const string& nomeArquivo) {
 }
 
 /* funcao bubble Sort */
-void bubbleSort(vector<int>& dados) {
-    for (size_t i = 0; i < dados.size(); i++) {
-        for (size_t j = 0; j < dados.size() - i - 1; ++j) {
+void bubbleSort(vector<int>& dados, int length) {
+    for (int i = 0; i < length; i++) {
+        for (int j = 0; j < length - i - 1; ++j) {
             if (dados[j] > dados[j + 1]) {
                 swap(dados[j], dados[j + 1]); // troca os valores de posicao
             }
@@ -35,13 +37,102 @@ void bubbleSort(vector<int>& dados) {
     cout << "Dados ordenados com Bubble Sort.\n";
 }
 
+/* funcao de ordenacao quicksort */
+void quicksort(vector<int>& dados, int inicio, int fim, int& qtd_trocas, int& qtd_comparacoes) {
+    if (inicio < fim) {
+        int i = inicio;
+        int j = fim - 1;
+        int pivo = dados[(inicio + fim) / 2] ;
+
+        while (i <= j) {
+            while (dados[i] < pivo) i++; /* se elemento for menor que pivo i anda para direita */ 
+            while (dados[j] > pivo) j--; /* se elemento for maior que pivo j anda para esquerda */
+            if (i <= j) {
+                swap(dados[i], dados[j]); /* troca de elementos no array */
+                qtd_trocas++;
+            }
+                qtd_comparacoes++;
+                i++;
+                j--;
+        }
+
+        if (j > inicio) {
+            quicksort(dados, inicio, j + 1, qtd_trocas, qtd_comparacoes);
+        }
+        if (i < fim) {
+            quicksort(dados, i, fim, qtd_trocas, qtd_comparacoes);
+        }
+
+    }
+}
+
+/* funcao para mesclar dois subvetores ordenados */
+void merge(vector<int>& dados, int inicio, int meio, int fim) {
+    int n1 = meio - inicio + 1; /* tamanho do subvetor esquerdo */
+    int n2 = fim - meio; /* tamanho do subvetor direito */
+
+    /* vetores temporarios */
+    vector<int> esquerda(n1);
+    vector<int> direita(n2);
+
+    /* copiando os dados para os vetores temporarios */
+    for (int i = 0; i < n1; i++) {
+        esquerda[i] = dados[inicio + i];
+    }
+    for (int j = 0; j < n2; j++) {
+        direita[j] = dados[meio + 1 + j];
+    }
+
+    /* indices */
+    int i = 0, j = 0, k = inicio;
+
+    /* mesclando os dois vetores ordenados */
+    while (i < n1 && j < n2) {
+        if (esquerda[i] <= direita[j]) {
+            dados[k] = esquerda[i];
+            i++;
+        } else {
+            dados[k] = direita[j];
+            j++;
+        }
+        k++;
+    }
+
+    /* copiando os elementos restantes (se houver) do vetor esquerdo */
+    while (i < n1) {
+        dados[k] = esquerda[i];
+        i++;
+        k++;
+    }
+
+    /* copiando os elementos restantes (se houver) do vetor direito */
+    while (j < n2) {
+        dados[k] = direita[j];
+        j++;
+        k++;
+    }
+}
+
+/* funcao principal do merge sort */
+void mergeSort(vector<int>& dados, int inicio, int fim) {
+    if (inicio < fim) {
+        int meio = inicio + (fim - inicio) / 2;
+
+        mergeSort(dados, inicio, meio);
+        mergeSort(dados, meio + 1, fim);
+
+        /* funcao principal do merge sort */
+        merge(dados, inicio, meio, fim);
+    }
+}
+
 /* funcao para salvar os dados ordenados em dados_ordenados.txt */
 void salvarDados(const string& nomeArquivo, const vector<int>& dados) {
-    ofstream arquivo(nomeArquivo); // abre o arquivo para armaezar os dados ordenados
+    ofstream arquivo(nomeArquivo); /* abre o arquivo para armaezar os dados ordenados */ 
 
     if (arquivo.is_open()) {
         for (int numero : dados) {
-            arquivo << numero << endl; // escreve os dados no arquivo
+            arquivo << numero << endl; /* escredo os numeros no arquivo */
         }
         arquivo.close();
         cout << "Dados salvos em '" << nomeArquivo << "'.\n";
@@ -90,22 +181,30 @@ int main() {
                 escolherAlgoritmo(algoritmoSelecionado);
                 break;
             case 2: {
-                if (algoritmoSelecionado == 1) {
-                    // Carregar os dados do arquivo
+                    // carregar os dados do arquivo
                     vector<int> dados = carregarDados("dados.txt");
+                    int tamanho = dados.size();
 
-                    if (!dados.empty()) {
-                        cout << "Dados carregados com sucesso. Ordenando...\n";
+                    if (dados.empty()) {
+                        cout << "Arquivo vazio!\n";
+                    } else {
+                        if (algoritmoSelecionado == 1) {
+                            // Ordenar os dados com Bubble Sort
+                            bubbleSort(dados, tamanho);
 
-                        // Ordenar os dados com Bubble Sort
-                        bubbleSort(dados);
+                        } else if (algoritmoSelecionado == 2) {
+                            // Ordenar os dados com quick Sort
+                            quicksort(dados, 0, tamanho, qtd_trocas, qtd_comparacoes);
+
+                        } else if (algoritmoSelecionado == 3) {
+                            mergeSort(dados, 0, tamanho - 1);
+                        } else {
+                            cout << "Escolha primeiro um metodo de ordenacao.\n";
+                        }
 
                         // Salvar os dados ordenados em um novo arquivo
                         salvarDados("dados_ordenados.txt", dados);
                     }
-                } else {
-                    cout << "Funcionalidade para outros algoritmos ainda nao implementada.\n";
-                }
                 break;
             }
             case 3:
