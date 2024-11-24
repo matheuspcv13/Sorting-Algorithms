@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector> /* biblioteca para auxiliar manipulacao dos vetores */
 #include <string>
+#include <chrono>
 
 using namespace std;
 int qtd_trocas = 0;
@@ -31,7 +32,9 @@ void bubbleSort(vector<int>& dados, int length) {
         for (int j = 0; j < length - i - 1; ++j) {
             if (dados[j] > dados[j + 1]) {
                 swap(dados[j], dados[j + 1]); // troca os valores de posicao
+                qtd_trocas++;
             }
+            qtd_comparacoes++;
         }
     }
     cout << "Dados ordenados com Bubble Sort.\n";
@@ -94,8 +97,10 @@ void merge(vector<int>& dados, int inicio, int meio, int fim) {
         } else {
             dados[k] = direita[j];
             j++;
+            qtd_trocas++;
         }
         k++;
+        qtd_comparacoes++;
     }
 
     /* copiando os elementos restantes (se houver) do vetor esquerdo */
@@ -158,10 +163,44 @@ void escolherAlgoritmo(int& algoritmoSelecionado) {
     }
 }
 
+void gerarRelatorio(const string& nomeArquivo, const string& algoritmo, int numElementos, int comparacoes, int trocas, double tempoExecucao) {
+    ofstream arquivo(nomeArquivo);
+    if (arquivo.is_open()) {
+        arquivo << "Algoritmo Utilizado: " << algoritmo << endl;
+        arquivo << "Número de Elementos: " << numElementos << endl;
+        arquivo << "Comparações Realizadas: " << comparacoes << endl;
+        arquivo << "Trocas Realizadas: " << trocas << endl;
+        arquivo << "Tempo de Execução: " << tempoExecucao << " segundos" << endl;
+
+        if (algoritmo == "Bubble Sort") {
+            arquivo << "Melhor Caso: O(n^2)" << endl;
+            arquivo << "Pior Caso: O(n^2)" << endl;
+            arquivo << "Caso Médio: O(n^2)" << endl;
+        } else if (algoritmo == "Quick Sort") {
+            arquivo << "Melhor Caso: O(n log n)" << endl;
+            arquivo << "Pior Caso: O(n^2)" << endl;
+            arquivo << "Caso Médio: O(n log n)" << endl;
+        } else if (algoritmo == "Merge Sort") {
+            arquivo << "Melhor Caso: O(n log n)" << endl;
+            arquivo << "Pior Caso: O(n log n)" << endl;
+            arquivo << "Caso Médio: O(n log n)" << endl;
+        }
+
+        arquivo.close();
+        cout << "Relatorio salvo em '" << nomeArquivo << "'.\n";
+    } else {
+        cerr << "Erro ao salvar o relatorio no arquivo '" << nomeArquivo << "'.\n";
+    }
+}
+
+
 /* funcao principal */
 int main() {
     int option = 0;
     int algoritmoSelecionado = 0;
+    int tamanho = 0;
+    chrono::duration<double> duracao;
+    string nomeAlgoritmo;
 
     while (option != 4) {
         cout << "===============================\n";
@@ -183,32 +222,41 @@ int main() {
             case 2: {
                     // carregar os dados do arquivo
                     vector<int> dados = carregarDados("dados.txt");
-                    int tamanho = dados.size();
+                    tamanho = dados.size();
 
                     if (dados.empty()) {
                         cout << "Arquivo vazio!\n";
                     } else {
+
+                        qtd_trocas = 0; qtd_comparacoes = 0;
+                        auto inicio = chrono::high_resolution_clock::now();
+
                         if (algoritmoSelecionado == 1) {
                             // Ordenar os dados com Bubble Sort
                             bubbleSort(dados, tamanho);
+                            nomeAlgoritmo = "Bubble Sort";
 
                         } else if (algoritmoSelecionado == 2) {
                             // Ordenar os dados com quick Sort
                             quicksort(dados, 0, tamanho, qtd_trocas, qtd_comparacoes);
+                            nomeAlgoritmo = "Quick Sort";
 
                         } else if (algoritmoSelecionado == 3) {
                             mergeSort(dados, 0, tamanho - 1);
+                            nomeAlgoritmo = "Merge Sort";
                         } else {
                             cout << "Escolha primeiro um metodo de ordenacao.\n";
                         }
 
                         // Salvar os dados ordenados em um novo arquivo
                         salvarDados("dados_ordenados.txt", dados);
+                        auto fim = chrono::high_resolution_clock::now();
+                        duracao = fim - inicio;
                     }
                 break;
             }
             case 3:
-                cout << "Funcionalidade de relatório sera implementada aqui.\n";
+                    gerarRelatorio("relatorio.txt", nomeAlgoritmo, tamanho, qtd_comparacoes, qtd_trocas, duracao.count());
                 break;
             case 4:
                 cout << "Saindo do sistema.\n";

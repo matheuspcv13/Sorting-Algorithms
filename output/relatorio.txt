@@ -1,0 +1,8 @@
+Algoritmo Utilizado: Bubble Sort
+Número de Elementos: 10
+Comparações Realizadas: 45
+Trocas Realizadas: 23
+Tempo de Execução: 0.000999 segundos
+Melhor Caso: O(n^2)
+Pior Caso: O(n^2)
+Caso Médio: O(n^2)
